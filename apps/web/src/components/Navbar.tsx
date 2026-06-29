@@ -1,22 +1,58 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 function Navbar() {
+  const location = useLocation()
+
+  const links = [
+    { to: '/', label: 'Home' },
+    { to: '/quran', label: 'Quran' },
+    { to: '/learn', label: 'Learn' },
+    { to: '/knowledge', label: 'Knowledge' },
+    { to: '/login', label: 'Login' },
+  ]
+
   return (
     <nav style={{
-      background: '#1a472a',
-      padding: '1rem 2rem',
+      background: '#0a2e1a',
+      padding: '0 2rem',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
+      height: '64px',
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+      boxShadow: '0 2px 12px rgba(0,0,0,0.3)'
     }}>
-      <div style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 'bold' }}>
-        🕌 Islamia.AI
-      </div>
-      <div style={{ display: 'flex', gap: '1.5rem' }}>
-        <Link to="/" style={{ color: '#fff', textDecoration: 'none' }}>Home</Link>
-        <Link to="/quran" style={{ color: '#fff', textDecoration: 'none' }}>Quran</Link>
-        <Link to="/learn" style={{ color: '#fff', textDecoration: 'none' }}>Learn</Link>
-        <Link to="/login" style={{ color: '#fff', textDecoration: 'none' }}>Login</Link>
+      <Link to="/" style={{
+        color: '#fff',
+        textDecoration: 'none',
+        fontSize: '1.3rem',
+        fontWeight: '700',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}>
+        🕌 Islamia<span style={{ color: '#4ade80' }}>.AI</span>
+      </Link>
+
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        {links.map(link => (
+          <Link
+            key={link.to}
+            to={link.to}
+            style={{
+              color: location.pathname === link.to ? '#4ade80' : 'rgba(255,255,255,0.7)',
+              textDecoration: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              fontWeight: location.pathname === link.to ? '600' : '400',
+              background: location.pathname === link.to ? 'rgba(74,222,128,0.1)' : 'transparent',
+              transition: 'all 0.2s'
+            }}
+          >{link.label}</Link>
+        ))}
       </div>
     </nav>
   )
