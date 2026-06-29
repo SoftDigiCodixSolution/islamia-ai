@@ -1,81 +1,67 @@
-import { useState, useEffect } from 'react'
-
-interface Surah {
-  number: number
-  name: string
-  englishName: string
-  numberOfAyahs: number
-}
+import { useState } from 'react'
+import SurahList from '../components/SurahList'
+import SurahReader from '../components/SurahReader'
 
 function Quran() {
-  const [surahs, setSurahs] = useState<Surah[]>([])
-  const [loading, setLoading] = useState(true)
+  const [selectedSurah, setSelectedSurah] = useState<number | null>(null)
+  const [translation, setTranslation] = useState('en.asad')
 
-  useEffect(() => {
-    fetch('https://api.alquran.cloud/v1/surah')
-      .then(res => res.json())
-      .then(data => {
-        setSurahs(data.data)
-        setLoading(false)
-      })
-  }, [])
+  const translations = [
+    { id: 'en.asad', name: 'English - Asad' },
+    { id: 'en.pickthall', name: 'English - Pickthall' },
+    { id: 'ur.jalandhry', name: 'Urdu - Jalandhry' },
+    { id: 'ur.maududi', name: 'Urdu - Maududi' },
+  ]
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
-      <h1 style={{ color: '#1a472a', textAlign: 'center', marginBottom: '2rem' }}>
-        📖 القرآن الكريم
-      </h1>
-      {loading ? (
-        <p style={{ textAlign: 'center' }}>Loading Surahs...</p>
-      ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-          gap: '1rem'
-        }}>
-          {surahs.map(surah => (
-            <div key={surah.number} style={{
-              background: '#fff',
-              border: '1px solid #e0e0e0',
-              borderRadius: '10px',
-              padding: '1rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-            }}
-              onMouseOver={e => (e.currentTarget.style.borderColor = '#1a472a')}
-              onMouseOut={e => (e.currentTarget.style.borderColor = '#e0e0e0')}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                <span style={{
-                  background: '#1a472a',
-                  color: '#fff',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.8rem',
-                  fontWeight: 'bold',
-                  flexShrink: 0
-                }}>{surah.number}</span>
-                <div>
-                  <p style={{ margin: 0, fontWeight: 'bold', color: '#1a472a' }}>
-                    {surah.englishName}
-                  </p>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#666' }}>
-                    {surah.numberOfAyahs} Ayahs
-                  </p>
-                </div>
-              </div>
-              <p style={{ margin: '0.5rem 0 0', textAlign: 'right', fontSize: '1.2rem', color: '#1a472a' }}>
-                {surah.name}
-              </p>
-            </div>
-          ))}
+    <div style={{ minHeight: '100vh', background: '#f9f9f9' }}>
+      {/* Header */}
+      <div style={{
+        background: '#1a472a',
+        padding: '1rem 2rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {selectedSurah && (
+            <button onClick={() => setSelectedSurah(null)} style={{
+              background: 'transparent',
+              border: '1px solid #fff',
+              color: '#fff',
+              padding: '0.4rem 1rem',
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}>← Back</button>
+          )}
+          <h2 style={{ color: '#fff', margin: 0 }}>📖 القرآن الكريم</h2>
         </div>
-      )}
+        <select
+          value={translation}
+          onChange={e => setTranslation(e.target.value)}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '6px',
+            border: 'none',
+            fontSize: '0.9rem'
+          }}
+        >
+          {translations.map(t => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+        {selectedSurah ? (
+          <SurahReader surahNumber={selectedSurah} translation={translation} />
+        ) : (
+          <SurahList onSelectSurah={setSelectedSurah} />
+        )}
+      </div>
     </div>
   )
 }
