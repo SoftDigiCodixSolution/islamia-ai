@@ -47,6 +47,18 @@ function HifzTracker({ onBack }: Props) {
     .reduce((sum, s) => sum + s.ayahs, 0)
   const progress = Math.round((memorizedAyahs / totalAyahs) * 100)
 
+  const getCardBg = (num: number) => {
+    if (memorized.includes(num)) return '#f0fdf4'
+    if (inProgress.includes(num)) return '#fff7ed'
+    return '#fff'
+  }
+
+  const getCardBorder = (num: number) => {
+    if (memorized.includes(num)) return '1px solid #4ade80'
+    if (inProgress.includes(num)) return '1px solid #fb923c'
+    return '1px solid #e8e8e8'
+  }
+
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', minHeight: '100vh', background: '#f8faf9' }}>
 
@@ -105,8 +117,6 @@ function HifzTracker({ onBack }: Props) {
               </div>
             ))}
           </div>
-
-          {/* Progress Bar */}
           <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '10px', height: '12px' }}>
             <div style={{
               background: '#4ade80',
@@ -126,92 +136,71 @@ function HifzTracker({ onBack }: Props) {
           Track your Surahs
         </h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-          {surahs.map(surah => {
-            const isMemorized = memorized.includes(surah.number)
-            const isProgress = inProgress.includes(surah.number)
-
-            return (
-              <div key={surah.number} style={{
-                background: '#fff',
-                borderRadius: '14px',
-                padding: '1.2rem 1.5rem',
-                border: isMemorized
-                  ? '1px solid #4ade80'
-                  : isProgress
-                    ? '1px solid #fb923c'
-                    : '1px solid #e8e8e8',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '1rem',
-                transition: 'all 0.2s',
-                background: isMemorized
-                  ? '#f0fdf4'
-                  : isProgress
-                    ? '#fff7ed'
-                    : '#fff'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={{
-                    background: isMemorized ? '#4ade80' : isProgress ? '#fb923c' : '#e8e8e8',
-                    color: isMemorized || isProgress ? '#fff' : '#666',
-                    width: '38px', height: '38px',
-                    borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.8rem', fontWeight: 'bold', flexShrink: 0
-                  }}>{surah.number}</span>
-                  <div>
-                    <p style={{ margin: 0, fontWeight: '600', color: '#0a2e1a' }}>
-                      {surah.name}
-                    </p>
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#888' }}>
-                      {surah.ayahs} ayahs • Juz {surah.juz}
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={{
-                    fontSize: '1.2rem',
-                    color: '#1a472a',
-                    fontFamily: 'serif'
-                  }}>{surah.arabic}</span>
-
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={() => toggleInProgress(surah.number)}
-                      style={{
-                        padding: '0.4rem 0.9rem',
-                        borderRadius: '8px',
-                        border: '1px solid #fb923c',
-                        background: isProgress ? '#fb923c' : 'transparent',
-                        color: isProgress ? '#fff' : '#fb923c',
-                        cursor: 'pointer',
-                        fontSize: '0.8rem',
-                        fontWeight: '600',
-                        transition: 'all 0.2s'
-                      }}
-                    >📝 Learning</button>
-                    <button
-                      onClick={() => toggleMemorized(surah.number)}
-                      style={{
-                        padding: '0.4rem 0.9rem',
-                        borderRadius: '8px',
-                        border: '1px solid #4ade80',
-                        background: isMemorized ? '#4ade80' : 'transparent',
-                        color: isMemorized ? '#fff' : '#1a472a',
-                        cursor: 'pointer',
-                        fontSize: '0.8rem',
-                        fontWeight: '600',
-                        transition: 'all 0.2s'
-                      }}
-                    >✅ Memorized</button>
-                  </div>
+          {surahs.map(surah => (
+            <div key={surah.number} style={{
+              background: getCardBg(surah.number),
+              borderRadius: '14px',
+              padding: '1.2rem 1.5rem',
+              border: getCardBorder(surah.number),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              transition: 'all 0.2s'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span style={{
+                  background: memorized.includes(surah.number) ? '#4ade80' : inProgress.includes(surah.number) ? '#fb923c' : '#e8e8e8',
+                  color: memorized.includes(surah.number) || inProgress.includes(surah.number) ? '#fff' : '#666',
+                  width: '38px', height: '38px',
+                  borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.8rem', fontWeight: 'bold', flexShrink: 0
+                }}>{surah.number}</span>
+                <div>
+                  <p style={{ margin: 0, fontWeight: '600', color: '#0a2e1a' }}>{surah.name}</p>
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#888' }}>
+                    {surah.ayahs} ayahs • Juz {surah.juz}
+                  </p>
                 </div>
               </div>
-            )
-          })}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span style={{ fontSize: '1.2rem', color: '#1a472a', fontFamily: 'serif' }}>
+                  {surah.arabic}
+                </span>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => toggleInProgress(surah.number)}
+                    style={{
+                      padding: '0.4rem 0.9rem',
+                      borderRadius: '8px',
+                      border: '1px solid #fb923c',
+                      background: inProgress.includes(surah.number) ? '#fb923c' : 'transparent',
+                      color: inProgress.includes(surah.number) ? '#fff' : '#fb923c',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: '600'
+                    }}
+                  >📝 Learning</button>
+                  <button
+                    onClick={() => toggleMemorized(surah.number)}
+                    style={{
+                      padding: '0.4rem 0.9rem',
+                      borderRadius: '8px',
+                      border: '1px solid #4ade80',
+                      background: memorized.includes(surah.number) ? '#4ade80' : 'transparent',
+                      color: memorized.includes(surah.number) ? '#fff' : '#1a472a',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: '600'
+                    }}
+                  >✅ Memorized</button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
