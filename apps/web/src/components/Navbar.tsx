@@ -4,11 +4,12 @@ function Navbar() {
   const location = useLocation()
 
   const links = [
-    { to: '/', label: 'Home' },
-    { to: '/quran', label: 'Quran' },
-    { to: '/learn', label: 'Learn' },
-    { to: '/knowledge', label: 'Knowledge' },
-    { to: '/login', label: 'Login' },
+    { to: '/', label: '🏠 Home' },
+    { to: '/quran', label: '📖 Quran' },
+    { to: '/learn', label: '🎓 Learn' },
+    { to: '/knowledge', label: '📚 Knowledge' },
+    { to: '/ai', label: '🤖 AI Chat' },
+    { to: '/login', label: '👤 Login' },
   ]
 
   return (
@@ -36,7 +37,7 @@ function Navbar() {
         🕌 Islamia<span style={{ color: '#4ade80' }}>.AI</span>
       </Link>
 
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
         {links.map(link => (
           <Link
             key={link.to}
@@ -44,12 +45,15 @@ function Navbar() {
             style={{
               color: location.pathname === link.to ? '#4ade80' : 'rgba(255,255,255,0.7)',
               textDecoration: 'none',
-              padding: '0.5rem 1rem',
+              padding: '0.4rem 0.8rem',
               borderRadius: '8px',
-              fontSize: '0.9rem',
+              fontSize: '0.85rem',
               fontWeight: location.pathname === link.to ? '600' : '400',
-              background: location.pathname === link.to ? 'rgba(74,222,128,0.1)' : 'transparent',
-              transition: 'all 0.2s'
+              background: location.pathname === link.to
+                ? 'rgba(74,222,128,0.1)'
+                : 'transparent',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap'
             }}
           >{link.label}</Link>
         ))}

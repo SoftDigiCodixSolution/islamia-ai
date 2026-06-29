@@ -5,6 +5,7 @@ import Quran from './pages/Quran'
 import Learn from './pages/Learn'
 import Login from './pages/Login'
 import Knowledge from './pages/Knowledge'
+import AiChat from './pages/AiChat'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/learn" element={<Learn />} />
         <Route path="/login" element={<Login />} />
         <Route path="/knowledge" element={<Knowledge />} />
+        <Route path="/ai" element={<AiChat />} />
       </Routes>
     </div>
   )
