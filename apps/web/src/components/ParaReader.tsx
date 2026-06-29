@@ -29,7 +29,7 @@ function ParaReader({ paraNumber, translation }: Props) {
   const [selectedQari, setSelectedQari] = useState(qaris[0])
   const [playingAyah, setPlayingAyah] = useState<number | null>(null)
   const [playMode, setPlayMode] = useState<'single' | 'continuous'>('single')
-  const [showTranslationAudio, setShowTranslationAudio] = useState(false)
+  // Removed: const [showTranslationAudio, setShowTranslationAudio] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -186,7 +186,7 @@ function ParaReader({ paraNumber, translation }: Props) {
 
       {/* Ayahs */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {ayahs.map((ayah, i) => (
+        {ayahs.map((ayah) => (   // removed unused 'i'
           <div key={ayah.number} style={{
             background: '#fff', borderRadius: '14px', padding: '1.5rem',
             border: playingAyah === ayah.number ? '2px solid #4ade80' : '1px solid #e8e8e8',
