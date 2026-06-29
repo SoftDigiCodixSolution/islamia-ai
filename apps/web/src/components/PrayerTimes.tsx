@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 interface Props {
   onBack: () => void
@@ -22,7 +22,7 @@ function PrayerTimes({ onBack }: Props) {
   const [loading, setLoading] = useState(false)
   const [location, setLocation] = useState<Coordinates | null>(null)
   const [error, setError] = useState('')
-  const [date, setDate] = useState(new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
+  const [date] = useState(new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
   const [nextPrayer, setNextPrayer] = useState('')
 
   const fetchPrayerTimes = async (lat: number, lng: number, city: string) => {
