@@ -16,7 +16,7 @@ const qaris = [
 
 function AudioPlayer({ surahNumber, ayahNumber, onClose }: Props) {
   const [selectedQari, setSelectedQari] = useState(qaris[0])
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [, setIsPlaying] = useState(false)
 
   const surahPadded = String(surahNumber).padStart(3, '0')
   const ayahPadded = String(ayahNumber).padStart(3, '0')
