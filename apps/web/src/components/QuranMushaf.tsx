@@ -24,12 +24,7 @@ const qaris = [
   { name: 'Yasser Al-Dosari', code: 'Yasser_Ad-Dussary_128kbps', country: '🇸🇦' },
 ]
 
-// Tajweed word-level coloring based on rules
-const tajweedRules = [
-  { pattern: /اللَّه|اللَّهُ|اللَّهِ|اللَّهَ/g, color: '#1a472a', rule: 'Lafz al-Jalalah' },
-  { pattern: /ّ/g, color: '#cc0000', rule: 'Shadda' },
-  { pattern: /ٰ/g, color: '#0066cc', rule: 'Madd' },
-]
+// Removed unused tajweedRules
 
 function applyTajweedColors(text: string, enabled: boolean) {
   if (!enabled) return <span className="quran-text">{text}</span>
@@ -69,7 +64,7 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
   const [currentPage, setCurrentPage] = useState(1)
   const [linesPerPage, setLinesPerPage] = useState(15)
   const [showTranslation, setShowTranslation] = useState(true)
-  const [showTajweed, setShowTajweed] = useState(false)
+  // Removed showTajweed, setShowTajweed
   const [mushafStyle, setMushafStyle] = useState<'uthmani' | 'colored' | 'blackwhite' | 'indopak'>('uthmani')
   const [readMode, setReadMode] = useState<'mushaf' | 'ayah' | 'page'>('mushaf')
   const [currentAyah, setCurrentAyah] = useState(0)
@@ -77,7 +72,7 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
   const [selectedQari, setSelectedQari] = useState(qaris[0])
   const [playMode, setPlayMode] = useState<'single' | 'continuous'>('continuous')
   const [showQariSelect, setShowQariSelect] = useState(false)
-  const [playTranslation, setPlayTranslation] = useState(false)
+  // Removed playTranslation, setPlayTranslation
   const [selectedTranslation, setSelectedTranslation] = useState(translation)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const bismillahRef = useRef<HTMLAudioElement | null>(null)
@@ -133,7 +128,8 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
     setPlayingAyah(null)
   }
 
-  const playAyahAudio = (ayahNum: number, afterBismillah = false) => {
+  // Removed unused 'afterBismillah' parameter
+  const playAyahAudio = (ayahNum: number) => {
     stopAudio()
     setPlayingAyah(ayahNum)
     const audio = new Audio(getAudioUrl(ayahNum))
