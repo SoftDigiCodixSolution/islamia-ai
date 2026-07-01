@@ -5,7 +5,7 @@ interface Props {
   translation: string
   theme: 'light' | 'dark' | 'sepia' | 'green'
   fontSize: number
-  showTajweed: boolean
+  // showTajweed removed
 }
 
 interface Ayah {
@@ -14,7 +14,7 @@ interface Ayah {
   translation: string
 }
 
-function QuranMushaf({ surahNumber, translation, theme, fontSize, showTajweed }: Props) {
+function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
   const [ayahs, setAyahs] = useState<Ayah[]>([])
   const [loading, setLoading] = useState(true)
   const [surahInfo, setSurahInfo] = useState<any>(null)
