@@ -47,7 +47,7 @@ router.post('/', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'mistralai/mistral-7b-instruct:free',
+        model: 'cohere/command-r-plus:free',
         messages
       })
     })
