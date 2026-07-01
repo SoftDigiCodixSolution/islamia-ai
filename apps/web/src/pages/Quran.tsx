@@ -2,7 +2,7 @@ import { useState } from 'react'
 import SurahList from '../components/SurahList'
 import SurahReader from '../components/SurahReader'
 import ParaReader from '../components/ParaReader'
-import QuranMushaf from '../components/QuranMushaf'
+import QuranMushaf from '../components/QuranMushaf'  // ensure file is named QuranMushaf.tsx
 
 type ReadingMode = 'surah' | 'para' | 'mushaf'
 type Theme = 'light' | 'dark' | 'sepia' | 'green'
@@ -154,12 +154,11 @@ function Quran() {
         {selectedSurah ? (
           readingMode === 'mushaf' ? (
             <QuranMushaf
-              surahNumber={selectedSurah}
-              translation={translation}
-              theme={theme}
-              fontSize={fontSize}
-              showTajweed={false}
-            />
+  surahNumber={selectedSurah}
+  translation={translation}
+  theme={theme}
+  fontSize={fontSize}
+/>
           ) : (
             <SurahReader surahNumber={selectedSurah} translation={translation} />
           )
