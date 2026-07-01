@@ -7,196 +7,409 @@ interface Props {
   fontSize: number
 }
 
-interface Ayah {
-  numberInSurah: number
-  text: string
-  translation: string
+interface PageAyah {
+  id: number
+  verse_key: string
+  text_uthmani: string
+  page_number: number
+}
+
+const themes = {
+  light: { bg: '#FEFEF9', paper: '#FFFEF5', text: '#1a0a00', border: '#C4A96B', accent: '#8B6914', shadow: 'rgba(139,105,20,0.15)' },
+  dark: { bg: '#0d0d0d', paper: '#1a1a0d', text: '#F5E6C8', border: '#4a3810', accent: '#D4A017', shadow: 'rgba(0,0,0,0.5)' },
+  sepia: { bg: '#F0E6D0', paper: '#FDF6E3', text: '#2C1810', border: '#A0845C', accent: '#6B4226', shadow: 'rgba(107,66,38,0.2)' },
+  green: { bg: '#E8F5E9', paper: '#F1F8E9', text: '#1B3A1F', border: '#81C784', accent: '#2E7D32', shadow: 'rgba(46,125,50,0.15)' },
+}
+
+// Tajweed color coding
+const tajweedColors = {
+  ghunna: '#22c55e',      // green - nasal sound
+  madd: '#3b82f6',        // blue - elongation  
+  qalqalah: '#f59e0b',    // amber - echo sound
+  idghaam: '#8b5cf6',     // purple - merging
+  ikhfaa: '#06b6d4',      // cyan - hiding
+  iqlaab: '#ef4444',      // red - changing
+  waqf: '#64748b',        // slate - stopping
 }
 
 function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
-  const [ayahs, setAyahs] = useState<Ayah[]>([])
-  const [loading, setLoading] = useState(true)
+  const [ayahs, setAyahs] = useState<any[]>([])
+  const [translationAyahs, setTranslationAyahs] = useState<any[]>([])
   const [surahInfo, setSurahInfo] = useState<any>(null)
-  const [viewMode, setViewMode] = useState<'mushaf' | 'line' | 'page'>('mushaf')
-
-  const themes = {
-    light: { bg: '#FAFAF7', text: '#1a1a1a', card: '#fff', border: '#e8e0d0', accent: '#1a472a' },
-    dark: { bg: '#1a1a2e', text: '#e8e8e8', card: '#16213e', border: '#2d4a7a', accent: '#4ade80' },
-    sepia: { bg: '#F4ECD8', text: '#2C1810', card: '#FDF6E3', border: '#C4A882', accent: '#8B4513' },
-    green: { bg: '#e8f5e9', text: '#1b5e20', card: '#fff', border: '#a5d6a7', accent: '#2e7d32' },
-  }
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [linesPerPage, setLinesPerPage] = useState(15)
+  const [showTranslation, setShowTranslation] = useState(true)
+  const [showTajweedColors, setShowTajweedColors] = useState(false)
+  const [mushafStyle, setMushafStyle] = useState<'colored' | 'blackwhite' | 'indopak'>('colored')
+  const [viewStyle, setViewStyle] = useState<'single' | 'double'>('single')
 
   const t = themes[theme]
 
   useEffect(() => {
     setLoading(true)
+    setCurrentPage(1)
     Promise.all([
       fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/quran-uthmani`).then(r => r.json()),
       fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/${translation}`).then(r => r.json())
     ]).then(([arabic, translated]) => {
       setSurahInfo(arabic.data)
-      const combined = arabic.data.ayahs.map((ayah: any, i: number) => ({
-        numberInSurah: ayah.numberInSurah,
-        text: ayah.text,
-        translation: translated.data.ayahs[i]?.text || ''
-      }))
-      setAyahs(combined)
+      setAyahs(arabic.data.ayahs)
+      setTranslationAyahs(translated.data.ayahs)
       setLoading(false)
     })
   }, [surahNumber, translation])
 
+  const ayahsPerPage = linesPerPage
+  const totalPages = Math.ceil(ayahs.length / ayahsPerPage)
+  const startIdx = (currentPage - 1) * ayahsPerPage
+  const pageAyahs = ayahs.slice(startIdx, startIdx + ayahsPerPage)
+  const pageTranslations = translationAyahs.slice(startIdx, startIdx + ayahsPerPage)
+
+  const getArabicTextStyle = () => {
+    if (mushafStyle === 'indopak') return { fontFamily: 'serif', letterSpacing: '3px' }
+    if (mushafStyle === 'blackwhite') return { fontFamily: 'serif', filter: 'grayscale(100%)' }
+    return { fontFamily: 'serif' }
+  }
+
   if (loading) return (
-    <div style={{ textAlign: 'center', padding: '4rem', background: t.bg, minHeight: '400px', borderRadius: '16px' }}>
-      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📖</div>
-      <p style={{ color: t.accent }}>Loading Surah...</p>
+    <div style={{
+      textAlign: 'center', padding: '4rem',
+      background: t.bg, borderRadius: '16px', minHeight: '400px'
+    }}>
+      <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📖</div>
+      <p style={{ color: t.accent, fontSize: '1.1rem' }}>Loading Mushaf...</p>
     </div>
   )
 
   return (
-    <div style={{ background: t.bg, borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+    <div style={{ background: t.bg, borderRadius: '16px', overflow: 'hidden', fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* Surah Header */}
+      {/* Mushaf Header */}
       <div style={{
-        background: `linear-gradient(135deg, ${t.accent}, ${t.accent}dd)`,
-        padding: '2rem', textAlign: 'center', color: '#fff'
+        background: `linear-gradient(135deg, ${t.accent}, ${t.accent}cc)`,
+        padding: '1.5rem 2rem', color: '#fff', textAlign: 'center'
       }}>
-        <p style={{ margin: '0 0 0.5rem', opacity: 0.8, fontSize: '0.85rem', letterSpacing: '3px' }}>
-          سورة
-        </p>
-        <h1 style={{ fontSize: '3rem', margin: '0 0 0.3rem', fontFamily: 'serif' }}>
+        <h2 style={{ margin: '0 0 0.3rem', fontSize: '1.8rem', fontFamily: 'serif' }}>
           {surahInfo?.name}
-        </h1>
-        <p style={{ margin: '0 0 1rem', opacity: 0.8 }}>
-          {surahInfo?.englishName} • {surahInfo?.numberOfAyahs} Ayahs • {surahInfo?.revelationType}
-        </p>
-        <p style={{ fontSize: '1.6rem', fontFamily: 'serif', margin: 0, letterSpacing: '3px' }}>
-          بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+        </h2>
+        <p style={{ margin: 0, opacity: 0.8, fontSize: '0.9rem' }}>
+          {surahInfo?.englishName} • {surahInfo?.numberOfAyahs} Ayahs
         </p>
       </div>
 
-      {/* View Mode Tabs */}
+      {/* Mushaf Controls */}
       <div style={{
-        background: t.card, borderBottom: `1px solid ${t.border}`,
-        display: 'flex', gap: 0, padding: '0 1rem'
+        background: t.paper, borderBottom: `1px solid ${t.border}`,
+        padding: '0.8rem 1.5rem', display: 'flex',
+        flexWrap: 'wrap', gap: '0.8rem', alignItems: 'center'
       }}>
-        {[
-          { id: 'mushaf', label: '📖 Mushaf' },
-          { id: 'line', label: '📄 Line by Line' },
-          { id: 'page', label: '📑 Page View' },
-        ].map(mode => (
-          <button key={mode.id} onClick={() => setViewMode(mode.id as any)} style={{
-            padding: '0.8rem 1.2rem', border: 'none',
-            background: 'transparent', cursor: 'pointer',
-            fontSize: '0.85rem', color: viewMode === mode.id ? t.accent : '#888',
-            borderBottom: viewMode === mode.id ? `3px solid ${t.accent}` : '3px solid transparent',
-            fontWeight: viewMode === mode.id ? '600' : '400'
-          }}>{mode.label}</button>
-        ))}
+
+        {/* Lines per page */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '0.8rem', color: t.accent, fontWeight: '600' }}>Lines/Page:</span>
+          {[10, 13, 15, 16, 18, 20].map(n => (
+            <button key={n} onClick={() => { setLinesPerPage(n); setCurrentPage(1) }} style={{
+              width: '32px', height: '28px', borderRadius: '6px',
+              border: `1px solid ${linesPerPage === n ? t.accent : t.border}`,
+              background: linesPerPage === n ? t.accent : 'transparent',
+              color: linesPerPage === n ? '#fff' : t.text,
+              cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600'
+            }}>{n}</button>
+          ))}
+        </div>
+
+        {/* Mushaf Style */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '0.8rem', color: t.accent, fontWeight: '600' }}>Style:</span>
+          {[
+            { id: 'colored', label: '🌈 Color' },
+            { id: 'blackwhite', label: '⬛ B&W' },
+            { id: 'indopak', label: '🕌 Indo-Pak' },
+          ].map(s => (
+            <button key={s.id} onClick={() => setMushafStyle(s.id as any)} style={{
+              padding: '0.3rem 0.7rem', borderRadius: '6px',
+              border: `1px solid ${mushafStyle === s.id ? t.accent : t.border}`,
+              background: mushafStyle === s.id ? t.accent : 'transparent',
+              color: mushafStyle === s.id ? '#fff' : t.text,
+              cursor: 'pointer', fontSize: '0.75rem'
+            }}>{s.label}</button>
+          ))}
+        </div>
+
+        {/* View Style */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button onClick={() => setViewStyle(viewStyle === 'single' ? 'double' : 'single')} style={{
+            padding: '0.3rem 0.7rem', borderRadius: '6px',
+            border: `1px solid ${t.border}`,
+            background: 'transparent', color: t.text,
+            cursor: 'pointer', fontSize: '0.75rem'
+          }}>{viewStyle === 'single' ? '📄 Single' : '📖 Double'}</button>
+        </div>
+
+        {/* Tajweed Colors */}
+        <button onClick={() => setShowTajweedColors(!showTajweedColors)} style={{
+          padding: '0.3rem 0.7rem', borderRadius: '6px',
+          border: `1px solid ${showTajweedColors ? t.accent : t.border}`,
+          background: showTajweedColors ? t.accent : 'transparent',
+          color: showTajweedColors ? '#fff' : t.text,
+          cursor: 'pointer', fontSize: '0.75rem'
+        }}>🎨 Tajweed Guide</button>
+
+        {/* Translation toggle */}
+        <button onClick={() => setShowTranslation(!showTranslation)} style={{
+          padding: '0.3rem 0.7rem', borderRadius: '6px',
+          border: `1px solid ${showTranslation ? t.accent : t.border}`,
+          background: showTranslation ? t.accent : 'transparent',
+          color: showTranslation ? '#fff' : t.text,
+          cursor: 'pointer', fontSize: '0.75rem'
+        }}>📝 Translation</button>
       </div>
 
-      {/* Mushaf View */}
-      {viewMode === 'mushaf' && (
-        <div style={{ padding: '2rem' }}>
-          <div style={{
-            background: t.card, borderRadius: '12px',
-            padding: '2rem', border: `1px solid ${t.border}`,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
-          }}>
-            <p style={{
-              fontSize: `${fontSize}px`,
-              lineHeight: '2.5',
-              textAlign: 'justify',
-              direction: 'rtl',
-              color: t.text,
-              fontFamily: 'serif',
-              margin: 0,
-              wordSpacing: '8px'
-            }}>
-              {ayahs.map(ayah => (
-                <span key={ayah.numberInSurah}>
-                  {ayah.text}
-                  <span style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '28px', height: '28px',
-                    background: t.accent,
-                    color: '#fff',
-                    borderRadius: '50%',
-                    fontSize: '0.65rem',
-                    margin: '0 4px',
-                    verticalAlign: 'middle',
-                    fontFamily: 'sans-serif'
-                  }}>{ayah.numberInSurah}</span>
-                  {' '}
-                </span>
-              ))}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Line by Line View */}
-      {viewMode === 'line' && (
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-          {ayahs.map(ayah => (
-            <div key={ayah.numberInSurah} style={{
-              background: t.card, borderRadius: '12px',
-              padding: '1.2rem 1.5rem', border: `1px solid ${t.border}`
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                <span style={{
-                  background: t.accent, color: '#fff',
-                  width: '32px', height: '32px', borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.75rem', fontWeight: 'bold'
-                }}>{ayah.numberInSurah}</span>
-              </div>
-              <p style={{
-                fontSize: `${fontSize}px`, textAlign: 'right',
-                direction: 'rtl', color: t.text, fontFamily: 'serif',
-                lineHeight: '2.2', margin: '0 0 0.8rem'
-              }}>{ayah.text}</p>
-              <p style={{ fontSize: '0.9rem', color: t.text, opacity: 0.7, margin: 0, lineHeight: '1.6' }}>
-                {ayah.translation}
-              </p>
+      {/* Tajweed Color Guide */}
+      {showTajweedColors && (
+        <div style={{
+          background: t.paper, padding: '1rem 1.5rem',
+          borderBottom: `1px solid ${t.border}`,
+          display: 'flex', flexWrap: 'wrap', gap: '0.8rem'
+        }}>
+          <span style={{ fontSize: '0.8rem', color: t.text, fontWeight: '600', marginRight: '0.5rem' }}>
+            Tajweed Colors:
+          </span>
+          {Object.entries(tajweedColors).map(([rule, color]) => (
+            <div key={rule} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: color }} />
+              <span style={{ fontSize: '0.75rem', color: t.text, textTransform: 'capitalize' }}>{rule}</span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Page View */}
-      {viewMode === 'page' && (
-        <div style={{ padding: '2rem' }}>
+      {/* Mushaf Pages */}
+      <div style={{
+        padding: '2rem',
+        display: viewStyle === 'double' ? 'grid' : 'block',
+        gridTemplateColumns: viewStyle === 'double' ? '1fr 1fr' : undefined,
+        gap: viewStyle === 'double' ? '1rem' : undefined
+      }}>
+
+        {/* Page */}
+        <div style={{
+          background: t.paper,
+          borderRadius: '8px',
+          border: `2px solid ${t.border}`,
+          padding: '2.5rem 2rem',
+          boxShadow: `0 8px 32px ${t.shadow}, inset 0 0 60px rgba(255,255,255,0.3)`,
+          minHeight: '600px',
+          position: 'relative'
+        }}>
+
+          {/* Page ornament top */}
           <div style={{
-            background: t.card, maxWidth: '600px', margin: '0 auto',
-            borderRadius: '4px', padding: '3rem 2.5rem',
-            border: `2px solid ${t.border}`,
-            boxShadow: '4px 4px 0 rgba(0,0,0,0.05), -4px 4px 0 rgba(0,0,0,0.05)',
-            minHeight: '800px'
+            textAlign: 'center', marginBottom: '1.5rem',
+            borderBottom: `2px solid ${t.border}`, paddingBottom: '1rem'
           }}>
-            <p style={{
-              fontSize: `${fontSize + 2}px`, lineHeight: '3',
-              textAlign: 'center', direction: 'rtl',
-              color: t.text, fontFamily: 'serif',
-              margin: 0, wordSpacing: '12px'
+            <span style={{ color: t.accent, fontSize: '0.85rem', fontFamily: 'serif', letterSpacing: '2px' }}>
+              ﷽
+            </span>
+          </div>
+
+          {/* Surah name decorative box */}
+          {currentPage === 1 && (
+            <div style={{
+              textAlign: 'center', marginBottom: '1.5rem',
+              padding: '0.8rem',
+              border: `2px solid ${t.accent}`,
+              borderRadius: '4px'
             }}>
-              {ayahs.slice(0, 15).map(ayah => (
-                <span key={ayah.numberInSurah}>
+              <p style={{
+                fontSize: `${fontSize + 4}px`, fontFamily: 'serif',
+                color: t.accent, margin: 0, letterSpacing: '4px'
+              }}>{surahInfo?.name}</p>
+              <p style={{ fontSize: '0.8rem', color: t.text, opacity: 0.7, margin: '0.3rem 0 0' }}>
+                {surahInfo?.englishName} — {surahInfo?.numberOfAyahs} Ayahs
+              </p>
+            </div>
+          )}
+
+          {/* Arabic Text — Mushaf Style */}
+          <div style={{
+            direction: 'rtl',
+            textAlign: 'justify',
+            lineHeight: '3',
+            ...getArabicTextStyle()
+          }}>
+            {pageAyahs.map((ayah, idx) => (
+              <span key={ayah.numberInSurah}>
+                <span style={{
+                  fontSize: `${fontSize}px`,
+                  color: mushafStyle === 'colored'
+                    ? (ayah.numberInSurah % 3 === 0 ? '#1a472a' : ayah.numberInSurah % 3 === 1 ? '#1a1a1a' : '#2c1810')
+                    : t.text,
+                }}>
                   {ayah.text}
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center',
-                    justifyContent: 'center', width: '24px', height: '24px',
-                    color: t.accent, fontSize: '0.7rem',
-                    margin: '0 3px', verticalAlign: 'middle',
-                    fontFamily: 'sans-serif'
-                  }}>۝{ayah.numberInSurah}</span>
                 </span>
-              ))}
-            </p>
+                {/* Ayah number in Arabic calligraphy style */}
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  margin: '0 4px',
+                  verticalAlign: 'middle',
+                  fontSize: '0.7rem',
+                  color: t.accent,
+                  fontFamily: 'serif',
+                  border: `1px solid ${t.accent}`,
+                  borderRadius: '50%'
+                }}>
+                  {ayah.numberInSurah}
+                </span>
+                {' '}
+              </span>
+            ))}
+          </div>
+
+          {/* Page number */}
+          <div style={{
+            textAlign: 'center', marginTop: '1.5rem',
+            borderTop: `1px solid ${t.border}`, paddingTop: '0.8rem',
+            fontSize: '0.8rem', color: t.accent, fontFamily: 'serif'
+          }}>
+            ۝ {currentPage} / {totalPages} ۝
+          </div>
+        </div>
+
+        {/* Double page second side */}
+        {viewStyle === 'double' && (
+          <div style={{
+            background: t.paper, borderRadius: '8px',
+            border: `2px solid ${t.border}`,
+            padding: '2.5rem 2rem',
+            boxShadow: `0 8px 32px ${t.shadow}`,
+            minHeight: '600px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            {currentPage < totalPages ? (
+              <p style={{ color: t.accent, opacity: 0.5, fontFamily: 'serif', fontSize: '1.2rem' }}>
+                ← Next Page
+              </p>
+            ) : (
+              <p style={{ color: t.accent, opacity: 0.5, fontFamily: 'serif', fontSize: '1.2rem' }}>
+                End of Surah
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Translation */}
+      {showTranslation && pageTranslations.length > 0 && (
+        <div style={{ padding: '0 2rem 1.5rem' }}>
+          <div style={{
+            background: t.paper, borderRadius: '12px',
+            padding: '1.5rem', border: `1px solid ${t.border}`
+          }}>
+            <h4 style={{ color: t.accent, margin: '0 0 1rem', fontSize: '0.9rem' }}>
+              📝 Translation — Page {currentPage}
+            </h4>
+            {pageTranslations.map((ayah, idx) => (
+              <div key={ayah.numberInSurah} style={{
+                display: 'flex', gap: '0.8rem', marginBottom: '0.8rem',
+                paddingBottom: '0.8rem',
+                borderBottom: idx < pageTranslations.length - 1 ? `1px solid ${t.border}` : 'none'
+              }}>
+                <span style={{
+                  background: t.accent, color: '#fff',
+                  width: '24px', height: '24px', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.7rem', fontWeight: 'bold', flexShrink: 0, marginTop: '2px'
+                }}>{ayah.numberInSurah}</span>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: t.text, lineHeight: '1.6' }}>
+                  {ayah.text}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       )}
+
+      {/* Navigation */}
+      <div style={{
+        padding: '1rem 2rem 2rem',
+        display: 'flex', justifyContent: 'center',
+        alignItems: 'center', gap: '1rem', flexWrap: 'wrap'
+      }}>
+        <button
+          onClick={() => setCurrentPage(1)}
+          disabled={currentPage === 1}
+          style={{
+            padding: '0.5rem 1rem', borderRadius: '8px',
+            border: `1px solid ${t.border}`,
+            background: 'transparent', color: t.text,
+            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            opacity: currentPage === 1 ? 0.4 : 1, fontSize: '0.85rem'
+          }}
+        >⏮ First</button>
+
+        <button
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+          style={{
+            padding: '0.5rem 1.2rem', borderRadius: '8px',
+            border: `1px solid ${t.border}`,
+            background: currentPage === 1 ? 'transparent' : t.accent,
+            color: currentPage === 1 ? t.text : '#fff',
+            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+            opacity: currentPage === 1 ? 0.4 : 1, fontSize: '0.9rem'
+          }}
+        >← Prev</button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum
+            if (totalPages <= 5) pageNum = i + 1
+            else if (currentPage <= 3) pageNum = i + 1
+            else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i
+            else pageNum = currentPage - 2 + i
+            return (
+              <button key={pageNum} onClick={() => setCurrentPage(pageNum)} style={{
+                width: '36px', height: '36px', borderRadius: '8px',
+                border: `1px solid ${pageNum === currentPage ? t.accent : t.border}`,
+                background: pageNum === currentPage ? t.accent : 'transparent',
+                color: pageNum === currentPage ? '#fff' : t.text,
+                cursor: 'pointer', fontSize: '0.85rem', fontWeight: pageNum === currentPage ? '700' : '400'
+              }}>{pageNum}</button>
+            )
+          })}
+        </div>
+
+        <button
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          style={{
+            padding: '0.5rem 1.2rem', borderRadius: '8px',
+            border: `1px solid ${t.border}`,
+            background: currentPage === totalPages ? 'transparent' : t.accent,
+            color: currentPage === totalPages ? t.text : '#fff',
+            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            opacity: currentPage === totalPages ? 0.4 : 1, fontSize: '0.9rem'
+          }}
+        >Next →</button>
+
+        <button
+          onClick={() => setCurrentPage(totalPages)}
+          disabled={currentPage === totalPages}
+          style={{
+            padding: '0.5rem 1rem', borderRadius: '8px',
+            border: `1px solid ${t.border}`,
+            background: 'transparent', color: t.text,
+            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+            opacity: currentPage === totalPages ? 0.4 : 1, fontSize: '0.85rem'
+          }}
+        >Last ⏭</button>
+      </div>
     </div>
   )
 }
