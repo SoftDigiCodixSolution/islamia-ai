@@ -27,42 +27,39 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' })
     }
 
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY
+    const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
-    const contents = [
+    const messages = [
+      { role: 'system', content: ISLAMIC_SYSTEM_PROMPT },
       ...(history || []).map((m: any) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
+        role: m.role,
+        content: m.content
       })),
-      {
-        role: 'user',
-        parts: [{ text: message }]
-      }
+      { role: 'user', content: message }
     ]
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: ISLAMIC_SYSTEM_PROMPT }]
-          },
-          contents
-        })
-      }
-    )
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://islamia-ai.vercel.app',
+        'X-Title': 'Islamia.AI',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-3.1-8b-instruct:free',
+        messages
+      })
+    })
 
     const data = await response.json()
 
     if (data.error) {
-      console.error('Gemini error:', data.error)
+      console.error('OpenRouter error:', data.error)
       return res.status(500).json({ error: data.error.message })
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response'
-
+    const reply = data.choices?.[0]?.message?.content || 'No response'
     res.json({ reply })
 
   } catch (error: any) {
