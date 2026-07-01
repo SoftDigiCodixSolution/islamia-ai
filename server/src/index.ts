@@ -1,26 +1,27 @@
 import express from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
-import chatRouter from './routes/chat.js'
+import { config } from 'dotenv'
+config()
 
-dotenv.config()
+import chatRouter from './routes/chat.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://islamia-ai.vercel.app'],
+  origin: '*',
   credentials: true
 }))
 
 app.use(express.json())
-
-// Routes
 app.use('/api/chat', chatRouter)
 
-// Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Islamia.AI Server Running' })
+  res.json({ 
+    status: 'ok', 
+    message: 'Islamia.AI Server Running',
+    hasKey: !!process.env.ANTHROPIC_API_KEY
+  })
 })
 
 app.listen(PORT, () => {
