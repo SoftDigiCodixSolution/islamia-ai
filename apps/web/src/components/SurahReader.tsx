@@ -298,7 +298,7 @@ function SurahReader({ surahNumber, translation }: Props) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
             <button onClick={() => {
-              const audio = new Audio(getAudioUrl({ numberInSurah: 0 } as any))
+              
               const bismillah = new Audio(`https://everyayah.com/data/${selectedQari.code}/001001.mp3`)
               bismillah.play()
             }} style={{
