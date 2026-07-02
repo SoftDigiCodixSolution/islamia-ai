@@ -47,6 +47,7 @@ function SurahReader({ surahNumber, translation }: Props) {
   const [highlightedAyah, setHighlightedAyah] = useState<number | null>(null)
   const [showQariList, setShowQariList] = useState(false)
   const [repeatAyah, setRepeatAyah] = useState(false)
+  const [playingBismillah, setPlayingBismillah] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -60,7 +61,12 @@ function SurahReader({ surahNumber, translation }: Props) {
       const combined = arabic.data.ayahs.map((ayah: any, i: number) => ({
         number: ayah.number,
         numberInSurah: ayah.numberInSurah,
-        text: ayah.text,
+        text: ayah.numberInSurah === 1
+          ? ayah.text
+            .replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, '')
+            .replace(/^بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\s*/, '')
+            .trim()
+          : ayah.text,
         translation: translated.data.ayahs[i]?.text || ''
       }))
       setAyahs(combined)
@@ -72,6 +78,10 @@ function SurahReader({ surahNumber, translation }: Props) {
     const surahPadded = String(surahNumber).padStart(3, '0')
     const ayahPadded = String(ayah.numberInSurah).padStart(3, '0')
     return `https://everyayah.com/data/${selectedQari.code}/${surahPadded}${ayahPadded}.mp3`
+  }
+
+  const getBismillahUrl = () => {
+    return `https://everyayah.com/data/${selectedQari.code}/001001.mp3`
   }
 
   const playAyah = (ayah: Ayah) => {
@@ -106,18 +116,30 @@ function SurahReader({ surahNumber, translation }: Props) {
     }
     setPlayingAyah(null)
     setHighlightedAyah(null)
+    setPlayingBismillah(false)
+  }
+
+  const playBismillah = () => {
+    stopAudio()
+    setPlayingBismillah(true)
+    const bismillah = new Audio(getBismillahUrl())
+    audioRef.current = bismillah
+    bismillah.play()
+    bismillah.onended = () => {
+      setPlayingBismillah(false)
+    }
   }
 
   const playSurah = () => {
     setPlayMode('surah')
-    if (ayahs.length > 0) {
-      // Play Bismillah first then surah
-      stopAudio()
-      const bismillah = new Audio(`https://everyayah.com/data/${selectedQari.code}/001001.mp3`)
-      bismillah.play()
-      bismillah.onended = () => {
-        playAyah(ayahs[0])
-      }
+    stopAudio()
+    setPlayingBismillah(true)
+    const bismillah = new Audio(getBismillahUrl())
+    audioRef.current = bismillah
+    bismillah.play()
+    bismillah.onended = () => {
+      setPlayingBismillah(false)
+      if (ayahs.length > 0) playAyah(ayahs[0])
     }
   }
 
@@ -142,7 +164,7 @@ function SurahReader({ surahNumber, translation }: Props) {
         <p style={{ margin: '0 0 0.3rem', opacity: 0.7, fontSize: '0.8rem', letterSpacing: '3px' }}>
           {surahInfo?.revelationType?.toUpperCase()} • {surahInfo?.numberOfAyahs} AYAHS
         </p>
-        <h1 style={{ fontSize: '3rem', margin: '0 0 0.3rem', fontFamily: 'serif', letterSpacing: '4px' }}>
+        <h1 style={{ fontSize: '3rem', margin: '0 0 0.3rem', fontFamily: 'Amiri Quran, serif', letterSpacing: '4px' }}>
           {surahInfo?.name}
         </h1>
         <h2 style={{ fontSize: '1.2rem', margin: '0 0 0.2rem', fontWeight: '400', opacity: 0.9 }}>
@@ -151,15 +173,16 @@ function SurahReader({ surahNumber, translation }: Props) {
         <p style={{ margin: '0 0 1.5rem', opacity: 0.6, fontSize: '0.85rem' }}>
           {surahInfo?.englishNameTranslation}
         </p>
-        <p style={{ fontSize: '1.5rem', fontFamily: 'serif', opacity: 0.9, margin: '0 0 1.5rem', letterSpacing: '2px' }}>
-          بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
-        </p>
         <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={playingAyah ? stopAudio : playSurah} style={{
-            background: '#4ade80', color: '#0a2e1a', border: 'none',
-            padding: '0.7rem 1.8rem', borderRadius: '10px',
-            cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem'
-          }}>{playingAyah ? '⏹ Stop' : '▶️ Play Full Surah'}</button>
+          <button
+            onClick={playingAyah || playingBismillah ? stopAudio : playSurah}
+            style={{
+              background: '#4ade80', color: '#0a2e1a', border: 'none',
+              padding: '0.7rem 1.8rem', borderRadius: '10px',
+              cursor: 'pointer', fontWeight: '700', fontSize: '0.95rem'
+            }}>
+            {playingAyah || playingBismillah ? '⏹ Stop' : '▶️ Play Full Surah'}
+          </button>
           <button onClick={() => setShowQariList(!showQariList)} style={{
             background: 'rgba(255,255,255,0.15)',
             border: '1px solid rgba(255,255,255,0.3)',
@@ -261,7 +284,7 @@ function SurahReader({ surahNumber, translation }: Props) {
       </div>
 
       {/* Now Playing */}
-      {playingAyah && (
+      {(playingAyah || playingBismillah) && (
         <div style={{
           background: 'linear-gradient(135deg, #1a472a, #2d6a4f)',
           borderRadius: '12px', padding: '1rem 1.5rem',
@@ -273,7 +296,7 @@ function SurahReader({ surahNumber, translation }: Props) {
             <span style={{ fontSize: '1.5rem' }}>🎵</span>
             <div>
               <p style={{ margin: 0, fontWeight: '600', fontSize: '0.9rem' }}>
-                Now Playing — Ayah {playingAyah}
+                {playingBismillah ? 'Playing Bismillah...' : `Now Playing — Ayah ${playingAyah}`}
               </p>
               <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.7 }}>
                 {selectedQari.country} {selectedQari.name} • {playMode === 'surah' ? 'Full Surah' : repeatAyah ? 'Repeating' : 'Single'}
@@ -288,48 +311,55 @@ function SurahReader({ surahNumber, translation }: Props) {
         </div>
       )}
 
-      {/* Ayahs */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {/* Bismillah before Ayah 1 */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1a472a11, #2d6a4f11)',
-          borderRadius: '14px', padding: '1.5rem',
-          textAlign: 'center', border: '2px solid #1a472a33'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-            <button onClick={() => {
-              
-              const bismillah = new Audio(`https://everyayah.com/data/${selectedQari.code}/001001.mp3`)
-              bismillah.play()
-            }} style={{
-              background: '#1a472a', color: '#fff', border: 'none',
+      {/* Bismillah */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1a472a11, #2d6a4f11)',
+        borderRadius: '14px', padding: '1.5rem',
+        textAlign: 'center', border: '2px solid #1a472a33',
+        marginBottom: '1rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+          <button
+            onClick={playingBismillah ? stopAudio : playBismillah}
+            style={{
+              background: playingBismillah ? '#ef4444' : '#1a472a',
+              color: '#fff', border: 'none',
               width: '36px', height: '36px', borderRadius: '50%',
               cursor: 'pointer', fontSize: '0.9rem', flexShrink: 0
-            }}>▶</button>
-            <p style={{
-              fontSize: `${fontSize + 4}px`, fontFamily: 'Amiri Quran, serif',
-              color: '#1a472a', margin: 0, direction: 'rtl',
-              letterSpacing: '3px'
             }}>
-              بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
-            </p>
-          </div>
-          {!showArabicOnly && (
-            <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#666', fontStyle: 'italic' }}>
-              In the name of Allah, the Most Gracious, the Most Merciful
-            </p>
-          )}
-        </div>
-        {ayahs.map(ayah => (
-          <div key={ayah.numberInSurah} style={{
-            background: highlightedAyah === ayah.numberInSurah ? '#f0fdf4' : '#fff',
-            borderRadius: '16px', padding: '1.5rem',
-            border: highlightedAyah === ayah.numberInSurah ? '2px solid #4ade80' : '1px solid #e8e8e8',
-            transition: 'all 0.3s',
-            boxShadow: highlightedAyah === ayah.numberInSurah
-              ? '0 8px 24px rgba(74,222,128,0.2)'
-              : '0 2px 8px rgba(0,0,0,0.04)'
+            {playingBismillah ? '⏹' : '▶'}
+          </button>
+          <p style={{
+            fontSize: `${fontSize + 4}px`,
+            fontFamily: 'Amiri Quran, Amiri, serif',
+            color: '#1a472a', margin: 0, direction: 'rtl',
+            letterSpacing: '3px'
           }}>
+            بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+          </p>
+        </div>
+        {!showArabicOnly && (
+          <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#666', fontStyle: 'italic' }}>
+            In the name of Allah, the Most Gracious, the Most Merciful
+          </p>
+        )}
+      </div>
+
+      {/* Ayahs */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {ayahs.map(ayah => (
+          <div
+            key={ayah.numberInSurah}
+            style={{
+              background: highlightedAyah === ayah.numberInSurah ? '#f0fdf4' : '#fff',
+              borderRadius: '16px', padding: '1.5rem',
+              border: highlightedAyah === ayah.numberInSurah ? '2px solid #4ade80' : '1px solid #e8e8e8',
+              transition: 'all 0.3s',
+              boxShadow: highlightedAyah === ayah.numberInSurah
+                ? '0 8px 24px rgba(74,222,128,0.2)'
+                : '0 2px 8px rgba(0,0,0,0.04)'
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <span style={{
                 background: 'linear-gradient(135deg, #1a472a, #2d6a4f)',
@@ -355,7 +385,8 @@ function SurahReader({ surahNumber, translation }: Props) {
 
             <p style={{
               fontSize: `${fontSize}px`, textAlign: 'right',
-              lineHeight: '2.2', color: '#1a1a1a', fontFamily: 'serif',
+              lineHeight: '2.2', color: '#1a1a1a',
+              fontFamily: 'Amiri Quran, Amiri, serif',
               margin: '0 0 1rem', direction: 'rtl',
               borderBottom: showArabicOnly ? 'none' : '1px solid #f0f0f0',
               paddingBottom: '1rem'

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import SurahList from '../components/SurahList'
 import SurahReader from '../components/SurahReader'
 import ParaReader from '../components/ParaReader'
-import QuranMushaf from '../components/QuranMushaf'  // ensure file is named QuranMushaf.tsx
+import QuranMushaf from '../components/QuranMushaf'
 
 type ReadingMode = 'surah' | 'para' | 'mushaf'
 type Theme = 'light' | 'dark' | 'sepia' | 'green'
@@ -38,16 +38,23 @@ function Quran() {
 
   const paras = Array.from({ length: 30 }, (_, i) => ({
     number: i + 1,
-    arabic: ['الم', 'سَيَقُولُ', 'تِلْكَ الرُّسُلُ', 'لَنْ تَنَالُوا', 'وَالْمُحْصَنَاتُ',
+    arabic: [
+      'الم', 'سَيَقُولُ', 'تِلْكَ الرُّسُلُ', 'لَنْ تَنَالُوا', 'وَالْمُحْصَنَاتُ',
       'لَا يُحِبُّ اللَّهُ', 'وَإِذَا سَمِعُوا', 'وَلَوْ أَنَّنَا', 'قَالَ الْمَلَأُ',
       'وَاعْلَمُوا', 'يَعْتَذِرُونَ', 'وَمَا مِنْ دَابَّةٍ', 'وَمَا أُبَرِّئُ',
       'رُبَمَا', 'سُبْحَانَ الَّذِي', 'قَالَ أَلَمْ', 'اقْتَرَبَ', 'قَدْ أَفْلَحَ',
       'وَقَالَ الَّذِينَ', 'أَمَّنْ خَلَقَ', 'اتْلُ مَا أُوحِيَ', 'وَمَنْ يَقْنُتْ',
-      'وَمَا لِيَ', 'فَمَنْ أَظْلَمُ', 'إِلَيْهِ يُرَدُّ', 'حم', 'قَالَ فَمَا خَطْبُكُمْ',
-      'قَدْ سَمِعَ اللَّهُ', 'تَبَارَكَ الَّذِي', 'عَمَّ'][i]
+      'وَمَا لِيَ', 'فَمَنْ أَظْلَمُ', 'إِلَيْهِ يُرَدُّ', 'حم',
+      'قَالَ فَمَا خَطْبُكُمْ', 'قَدْ سَمِعَ اللَّهُ', 'تَبَارَكَ الَّذِي', 'عَمَّ'
+    ][i]
   }))
 
   const navBg = themes[theme].nav
+
+  const handleBack = () => {
+    setSelectedSurah(null)
+    setSelectedPara(null)
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: themes[theme].bg, fontFamily: 'system-ui, sans-serif' }}>
@@ -57,25 +64,31 @@ function Quran() {
         background: navBg, padding: '1rem 2rem',
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem',
-        position: 'sticky', top: '64px', zIndex: 50
+        position: 'sticky', top: '64px', zIndex: 50,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {(selectedSurah || selectedPara) && (
-            <button onClick={() => { setSelectedSurah(null); setSelectedPara(null) }} style={{
+            <button onClick={handleBack} style={{
               background: 'rgba(255,255,255,0.15)',
               border: '1px solid rgba(255,255,255,0.3)',
               color: '#fff', padding: '0.4rem 1rem',
               borderRadius: '8px', cursor: 'pointer'
             }}>← Back</button>
           )}
-          <h2 style={{ color: '#fff', margin: 0, fontSize: '1.2rem' }}>📖 القرآن الكريم</h2>
+          <h2 style={{ color: '#fff', margin: 0, fontSize: '1.2rem' }}>
+            📖 القرآن الكريم
+          </h2>
         </div>
 
         <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <select value={translation} onChange={e => setTranslation(e.target.value)} style={{
-            padding: '0.4rem 0.8rem', borderRadius: '8px',
-            border: 'none', fontSize: '0.8rem', cursor: 'pointer'
-          }}>
+          <select
+            value={translation}
+            onChange={e => setTranslation(e.target.value)}
+            style={{
+              padding: '0.4rem 0.8rem', borderRadius: '8px',
+              border: 'none', fontSize: '0.8rem', cursor: 'pointer'
+            }}>
             {translations.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
 
@@ -117,7 +130,9 @@ function Quran() {
               width: '28px', height: '28px', borderRadius: '50%',
               border: '1px solid #ddd', background: '#f5f5f5', cursor: 'pointer'
             }}>−</button>
-            <span style={{ fontWeight: 'bold', color: '#1a472a', fontSize: '0.85rem', minWidth: '40px', textAlign: 'center' }}>{fontSize}px</span>
+            <span style={{ fontWeight: 'bold', color: '#1a472a', fontSize: '0.85rem', minWidth: '40px', textAlign: 'center' }}>
+              {fontSize}px
+            </span>
             <button onClick={() => setFontSize(f => Math.min(52, f + 2))} style={{
               width: '28px', height: '28px', borderRadius: '50%',
               border: '1px solid #ddd', background: '#f5f5f5', cursor: 'pointer'
@@ -126,7 +141,7 @@ function Quran() {
         </div>
       )}
 
-      {/* Reading Mode Tabs */}
+      {/* Reading Mode Tabs — only show when no surah/para selected */}
       {!selectedSurah && !selectedPara && (
         <div style={{
           background: '#fff', borderBottom: '1px solid #e8e8e8',
@@ -137,67 +152,93 @@ function Quran() {
             { id: 'para', label: '📑 Para (Juz)' },
             { id: 'mushaf', label: '🕌 Mushaf View' },
           ].map(mode => (
-            <button key={mode.id} onClick={() => setReadingMode(mode.id as ReadingMode)} style={{
-              padding: '1rem 1.5rem', border: 'none',
-              background: 'transparent', cursor: 'pointer',
-              fontSize: '0.9rem',
-              fontWeight: readingMode === mode.id ? '600' : '400',
-              color: readingMode === mode.id ? '#1a472a' : '#888',
-              borderBottom: readingMode === mode.id ? '3px solid #1a472a' : '3px solid transparent'
-            }}>{mode.label}</button>
+            <button
+              key={mode.id}
+              onClick={() => setReadingMode(mode.id as ReadingMode)}
+              style={{
+                padding: '1rem 1.5rem', border: 'none',
+                background: 'transparent', cursor: 'pointer',
+                fontSize: '0.9rem',
+                fontWeight: readingMode === mode.id ? '600' : '400',
+                color: readingMode === mode.id ? '#1a472a' : '#888',
+                borderBottom: readingMode === mode.id
+                  ? '3px solid #1a472a'
+                  : '3px solid transparent',
+                transition: 'all 0.2s'
+              }}>
+              {mode.label}
+            </button>
           ))}
         </div>
       )}
 
       {/* Content */}
       <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
-        {selectedSurah ? (
-          readingMode === 'mushaf' ? (
-            <QuranMushaf
-  surahNumber={selectedSurah}
-  translation={translation}
-  theme={theme}
-  fontSize={fontSize}
-/>
-          ) : (
-            <SurahReader surahNumber={selectedSurah} translation={translation} />
-          )
-        ) : selectedPara ? (
-          <ParaReader paraNumber={selectedPara} translation={translation} />
-        ) : readingMode === 'surah' ? (
-          <SurahList onSelectSurah={(num) => { setSelectedSurah(num) }} />
-        ) : readingMode === 'mushaf' ? (
-          <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🕌</div>
-            <h3 style={{ color: '#1a472a' }}>Select a Surah to read in Mushaf view</h3>
-            <button onClick={() => setReadingMode('surah')} style={{
-              background: '#1a472a', color: '#fff', border: 'none',
-              padding: '0.8rem 2rem', borderRadius: '10px',
-              cursor: 'pointer', fontSize: '1rem', marginTop: '1rem'
-            }}>Browse Surahs →</button>
-          </div>
-        ) : (
+
+        {/* Surah Selected */}
+        {selectedSurah && readingMode !== 'mushaf' && (
+          <SurahReader
+            surahNumber={selectedSurah}
+            translation={translation}
+          />
+        )}
+
+        {selectedSurah && readingMode === 'mushaf' && (
+          <QuranMushaf
+            surahNumber={selectedSurah}
+            translation={translation}
+            theme={theme}
+            fontSize={fontSize}
+          />
+        )}
+
+        {/* Para Selected */}
+        {selectedPara && (
+          <ParaReader
+            paraNumber={selectedPara}
+            translation={translation}
+          />
+        )}
+
+        {/* No selection — Surah Mode */}
+        {!selectedSurah && !selectedPara && readingMode === 'surah' && (
+          <SurahList onSelectSurah={(num) => {
+            setSelectedSurah(num)
+            setReadingMode('surah')
+          }} />
+        )}
+
+        {/* No selection — Para Mode */}
+        {!selectedSurah && !selectedPara && readingMode === 'para' && (
           <div>
-            <h3 style={{ color: '#0a2e1a', marginBottom: '1.5rem' }}>Select a Para (Juz)</h3>
+            <h3 style={{ color: '#0a2e1a', marginBottom: '1.5rem' }}>
+              Select a Para (Juz)
+            </h3>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
               gap: '1rem'
             }}>
               {paras.map(para => (
-                <div key={para.number} onClick={() => setSelectedPara(para.number)} style={{
-                  background: '#fff', borderRadius: '14px',
-                  padding: '1.2rem', textAlign: 'center',
-                  border: '1px solid #e8e8e8', cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
+                <div
+                  key={para.number}
+                  onClick={() => setSelectedPara(para.number)}
+                  style={{
+                    background: '#fff', borderRadius: '14px',
+                    padding: '1.2rem', textAlign: 'center',
+                    border: '1px solid #e8e8e8', cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                  }}
                   onMouseOver={e => {
                     e.currentTarget.style.borderColor = '#1a472a'
                     e.currentTarget.style.transform = 'translateY(-3px)'
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(26,71,42,0.15)'
                   }}
                   onMouseOut={e => {
                     e.currentTarget.style.borderColor = '#e8e8e8'
                     e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'
                   }}
                 >
                   <div style={{
@@ -210,12 +251,31 @@ function Quran() {
                   <p style={{ margin: '0 0 0.3rem', fontWeight: '600', color: '#0a2e1a', fontSize: '0.85rem' }}>
                     Para {para.number}
                   </p>
-                  <p style={{ margin: 0, fontFamily: 'serif', color: '#1a472a', fontSize: '1rem' }}>
+                  <p style={{ margin: 0, fontFamily: 'Amiri Quran, serif', color: '#1a472a', fontSize: '1rem' }}>
                     {para.arabic}
                   </p>
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* No selection — Mushaf Mode */}
+        {!selectedSurah && !selectedPara && readingMode === 'mushaf' && (
+          <div>
+            <div style={{
+              background: 'linear-gradient(135deg, #1a472a, #2d6a4f)',
+              borderRadius: '16px', padding: '2rem',
+              textAlign: 'center', color: '#fff', marginBottom: '2rem'
+            }}>
+              <h2 style={{ margin: '0 0 0.5rem' }}>🕌 Mushaf View</h2>
+              <p style={{ margin: 0, opacity: 0.8 }}>
+                Select a Surah below to read in beautiful Mushaf format
+              </p>
+            </div>
+            <SurahList onSelectSurah={(num) => {
+              setSelectedSurah(num)
+            }} />
           </div>
         )}
       </div>
