@@ -24,18 +24,31 @@ const qaris = [
   { name: 'Yasser Al-Dosari', code: 'Yasser_Ad-Dussary_128kbps', country: '🇸🇦' },
 ]
 
+// Tajweed word-level coloring based on rules
+const tajweedRules = [
+  { pattern: /اللَّه|اللَّهُ|اللَّهِ|اللَّهَ/g, color: '#1a472a', rule: 'Lafz al-Jalalah' },
+  { pattern: /ّ/g, color: '#cc0000', rule: 'Shadda' },
+  { pattern: /ٰ/g, color: '#0066cc', rule: 'Madd' },
+]
+
 function applyTajweedColors(text: string, enabled: boolean) {
   if (!enabled) return <span className="quran-text">{text}</span>
 
+  // Split into words and color based on tajweed rules
   const words = text.split(' ')
   return (
     <>
       {words.map((word, i) => {
         let color = 'inherit'
+        // Ghunna - nasal letters (م ن with shadda)
         if (/[من]ّ/.test(word)) color = '#22c55e'
+        // Madd - elongation letters
         else if (/[اويى]/.test(word) && word.length > 3) color = '#3b82f6'
+        // Qalqalah letters
         else if (/[قطبجد]ْ/.test(word)) color = '#f59e0b'
+        // Laam Jalalah
         else if (/الل/.test(word)) color = '#8b5cf6'
+        // Tafkheem (heavy letters)
         else if (/[صضطظ]/.test(word)) color = '#ef4444'
 
         return (
@@ -56,13 +69,15 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
   const [currentPage, setCurrentPage] = useState(1)
   const [linesPerPage, setLinesPerPage] = useState(15)
   const [showTranslation, setShowTranslation] = useState(true)
-  const [mushafStyle, setMushafStyle] = useState<'uthmani' | 'colored' | 'blackwhite'>('uthmani')
+  const [showTajweed, setShowTajweed] = useState(false)
+  const [mushafStyle, setMushafStyle] = useState<'uthmani' | 'colored' | 'blackwhite' | 'indopak'>('uthmani')
   const [readMode, setReadMode] = useState<'mushaf' | 'ayah' | 'page'>('mushaf')
   const [currentAyah, setCurrentAyah] = useState(0)
   const [playingAyah, setPlayingAyah] = useState<number | null>(null)
   const [selectedQari, setSelectedQari] = useState(qaris[0])
   const [playMode, setPlayMode] = useState<'single' | 'continuous'>('continuous')
   const [showQariSelect, setShowQariSelect] = useState(false)
+  const [playTranslation, setPlayTranslation] = useState(false)
   const [selectedTranslation, setSelectedTranslation] = useState(translation)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const bismillahRef = useRef<HTMLAudioElement | null>(null)
@@ -80,9 +95,6 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
     { id: 'de.bubenheim', name: '🇩🇪 German' },
     { id: 'id.indonesian', name: '🇮🇩 Indonesian' },
   ]
-
-  // Common Mushaf line counts: 15 (standard), 16 (Medina), 18 (Kuwait), 19 (Turkey), 20 (Indo-Pak)
-  const lineOptions = [15, 16, 18, 19, 20]
 
   useEffect(() => {
     setLoading(true)
@@ -121,7 +133,7 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
     setPlayingAyah(null)
   }
 
-  const playAyahAudio = (ayahNum: number) => {
+  const playAyahAudio = (ayahNum: number, afterBismillah = false) => {
     stopAudio()
     setPlayingAyah(ayahNum)
     const audio = new Audio(getAudioUrl(ayahNum))
@@ -142,6 +154,7 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
   }
 
   const playSurahFromStart = () => {
+    // Play Bismillah first then Surah
     const bismillah = new Audio(getBismillahUrl())
     bismillahRef.current = bismillah
     bismillah.play()
@@ -236,32 +249,30 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
           ))}
         </div>
 
-        {/* Lines per page - expanded with more options */}
+        {/* Lines per page */}
         {(readMode === 'mushaf' || readMode === 'page') && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span style={{ fontSize: '0.8rem', color: t.accent, fontWeight: '600' }}>Lines:</span>
-            {lineOptions.map(n => (
+            {[15, 16, 18, 19, 20].map(n => (
               <button key={n} onClick={() => { setLinesPerPage(n); setCurrentPage(1) }} style={{
-                padding: '0.3rem 0.6rem',
-                borderRadius: '6px',
+                width: '30px', height: '26px', borderRadius: '6px',
                 border: `1px solid ${linesPerPage === n ? t.accent : t.border}`,
                 background: linesPerPage === n ? t.accent : 'transparent',
                 color: linesPerPage === n ? '#fff' : t.text,
-                cursor: 'pointer', fontSize: '0.72rem', fontWeight: '600',
-                minWidth: '32px'
+                cursor: 'pointer', fontSize: '0.72rem', fontWeight: '600'
               }}>{n}</button>
             ))}
           </div>
         )}
 
-        {/* Style - Uthmani, Tajweed, Black & White */}
+        {/* Style */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <span style={{ fontSize: '0.8rem', color: t.accent, fontWeight: '600' }}>Style:</span>
           {[
-            { id: 'uthmani', label: '🕌 Uthmani' },
-            { id: 'colored', label: '🌈 Tajweed' },
-            { id: 'blackwhite', label: '⬛ B&W' },
-          ].map(s => (
+  { id: 'uthmani', label: '🕌 Uthmani' },
+  { id: 'colored', label: '🌈 Tajweed' },
+  { id: 'blackwhite', label: '⬛ B&W' },
+].map(s => (
             <button key={s.id} onClick={() => setMushafStyle(s.id as any)} style={{
               padding: '0.3rem 0.6rem', borderRadius: '6px',
               border: `1px solid ${mushafStyle === s.id ? t.accent : t.border}`,
@@ -307,7 +318,7 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
         }}>📝 Translation</button>
       </div>
 
-      {/* Tajweed Color Guide - only when colored mode is selected */}
+      {/* Tajweed Color Guide */}
       {mushafStyle === 'colored' && (
         <div style={{
           background: t.paper, padding: '0.6rem 1.5rem',
@@ -405,6 +416,7 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
             border: `2px solid ${t.accent}`, padding: '2rem',
             boxShadow: `0 8px 32px ${t.shadow}`, textAlign: 'center'
           }}>
+            {/* Navigation */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
               <button onClick={() => setCurrentAyah(Math.max(0, currentAyah - 1))} disabled={currentAyah === 0} style={{
                 padding: '0.5rem 1.2rem', borderRadius: '8px',
@@ -423,6 +435,7 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
               }}>Next →</button>
             </div>
 
+            {/* Arabic */}
             {ayahs[currentAyah] && (
               <>
                 <div style={{
@@ -433,14 +446,13 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
                 }}>
                   {mushafStyle === 'colored'
                     ? applyTajweedColors(ayahs[currentAyah].text, true)
-                    : <span className="quran-text" style={{ 
-                        color: mushafStyle === 'blackwhite' ? '#000' : t.text 
-                      }}>
+                    : <span className="quran-text" style={{ color: mushafStyle === 'blackwhite' ? '#000' : t.text }}>
                       {ayahs[currentAyah].text}
                     </span>
                   }
                 </div>
 
+                {/* Play button */}
                 <button onClick={() => playingAyah === currentAyah + 1 ? stopAudio() : playAyahAudio(currentAyah + 1)} style={{
                   background: playingAyah === currentAyah + 1 ? '#ef4444' : t.accent,
                   color: '#fff', border: 'none',
@@ -449,6 +461,7 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
                   fontSize: '0.95rem', marginBottom: '1rem'
                 }}>{playingAyah === currentAyah + 1 ? '⏹ Stop' : '🎵 Listen'}</button>
 
+                {/* Translation */}
                 {showTranslation && translationAyahs[currentAyah] && (
                   <div style={{
                     marginTop: '1rem', padding: '1rem',
@@ -511,12 +524,13 @@ function QuranMushaf({ surahNumber, translation, theme, fontSize }: Props) {
                 ))}
               </div>
 
+              {/* Page number */}
               <div style={{
                 textAlign: 'center', marginTop: '1.5rem',
                 borderTop: `1px solid ${t.border}`, paddingTop: '0.8rem',
                 fontSize: '0.8rem', color: t.accent
               }}>
-                Page {currentPage} of {totalPages} • {linesPerPage} lines
+                Page {currentPage} of {totalPages} • {linesPerPage} lines/page
               </div>
             </div>
           </div>
