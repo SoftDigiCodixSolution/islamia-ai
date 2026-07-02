@@ -110,7 +110,15 @@ function SurahReader({ surahNumber, translation }: Props) {
 
   const playSurah = () => {
     setPlayMode('surah')
-    if (ayahs.length > 0) playAyah(ayahs[0])
+    if (ayahs.length > 0) {
+      // Play Bismillah first then surah
+      stopAudio()
+      const bismillah = new Audio(`https://everyayah.com/data/${selectedQari.code}/001001.mp3`)
+      bismillah.play()
+      bismillah.onended = () => {
+        playAyah(ayahs[0])
+      }
+    }
   }
 
   if (loading) return (
@@ -282,6 +290,36 @@ function SurahReader({ surahNumber, translation }: Props) {
 
       {/* Ayahs */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Bismillah before Ayah 1 */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1a472a11, #2d6a4f11)',
+          borderRadius: '14px', padding: '1.5rem',
+          textAlign: 'center', border: '2px solid #1a472a33'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+            <button onClick={() => {
+              const audio = new Audio(getAudioUrl({ numberInSurah: 0 } as any))
+              const bismillah = new Audio(`https://everyayah.com/data/${selectedQari.code}/001001.mp3`)
+              bismillah.play()
+            }} style={{
+              background: '#1a472a', color: '#fff', border: 'none',
+              width: '36px', height: '36px', borderRadius: '50%',
+              cursor: 'pointer', fontSize: '0.9rem', flexShrink: 0
+            }}>▶</button>
+            <p style={{
+              fontSize: `${fontSize + 4}px`, fontFamily: 'Amiri Quran, serif',
+              color: '#1a472a', margin: 0, direction: 'rtl',
+              letterSpacing: '3px'
+            }}>
+              بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+            </p>
+          </div>
+          {!showArabicOnly && (
+            <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#666', fontStyle: 'italic' }}>
+              In the name of Allah, the Most Gracious, the Most Merciful
+            </p>
+          )}
+        </div>
         {ayahs.map(ayah => (
           <div key={ayah.numberInSurah} style={{
             background: highlightedAyah === ayah.numberInSurah ? '#f0fdf4' : '#fff',
